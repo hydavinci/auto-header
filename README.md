@@ -1,71 +1,64 @@
-# auto-header README
+# Auto Header
 
-This is the README for your extension "auto-header". After writing up a brief description, we recommend including the following sections.
+A simple and efficient VS Code extension for automatically managing header file includes in C/C++ files.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Automatically add corresponding `.h` header files to C/C++ source files
+- Quick access through the context menu
+- Status bar button for easy access
+- Keyboard shortcut support with `Ctrl+K Ctrl+H`
+- Ability to create non-existent header files automatically
+- Preserves comments at the top of the file when adding include statements
+- Highly customizable with various configuration options
 
-For example if there is an image subfolder under your extension project workspace:
+## Usage
 
-\!\[feature X\]\(images/feature-x.png\)
+### Adding Header Files
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+When editing a C/C++ source file, you can add the corresponding header file in several ways:
 
-## Requirements
+1. Press the keyboard shortcut `Ctrl+K Ctrl+H`
+2. Click the "Add Header" button in the status bar
+3. Right-click in the editor and select "Include Header File"
+4. Open the command palette (Ctrl+Shift+P) and type "Include Header File"
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+The extension will automatically find the header file with the same name as the current source file and add an appropriate `#include` statement at the top of the file.
 
-## Extension Settings
+### Creating and Adding Header Files
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+If the header file doesn't exist, you can:
 
-For example:
+1. Right-click in the editor and select "Create and Include Header File"
+2. Open the command palette (Ctrl+Shift+P) and type "Create and Include Header File"
 
-This extension contributes the following settings:
+The extension will create a new header file and automatically add basic header guards and structure.
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+## Configuration Options
 
-## Known Issues
+You can customize the following options in settings:
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+| Setting | Description | Default Value |
+| --- | --- | --- |
+| `autoHeader.supportedExtensions` | Supported C/C++ source file extensions | `[".c", ".cpp", ".cc"]` |
+| `autoHeader.headerExtensions` | Header file extensions to search for, ordered by priority | `[".h"]` |
+| `autoHeader.insertEmptyLineAfter` | Add an empty line after the inserted include statement | `true` |
+| `autoHeader.includeFormat` | Include format for header files, quotes uses `""`, brackets uses `<>` | `"quotes"` |
+| `autoHeader.headerTemplate` | Template for new header files, use `${filename}` as a placeholder for the file name | `"#pragma once\n\n// Header file for ${filename}\n\n"` |
+| `autoHeader.askBeforeCreating` | Ask user before creating a new header file | `true` |
 
-## Release Notes
+## Example
 
-Users appreciate release notes as you update your extension.
+For a source file named `example.cpp`, the extension will:
 
-### 1.0.0
+1. Look for an `example.h` file in the same directory
+2. Add `#include "example.h"` at the top of the file
+3. If the header file doesn't exist and the user chooses to create it, generate a new header file with a basic structure
 
-Initial release of ...
+## Version History
 
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+### 0.0.1
+- Initial release
+- Support for adding header files to C/C++ source files
+- Support for creating non-existent header files
+- Custom configuration options

@@ -1,6 +1,6 @@
 {
   "name": "auto-header",
-  "displayName": "C++ auto header",
+  "displayName": "Auto Header",
   "description": "add header file for the C++ file",
   "version": "0.0.1",
   "engines": {
@@ -9,15 +9,83 @@
   "categories": [
     "Other"
   ],
+  "icon": "images/icon.png",
+  "publisher": "hydavinci",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hydavinci/auto-header"
+  },
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "auto-header.helloWorld",
-        "title": "Hello World"
+        "command": "auto-header.run",
+        "title": "Include Header File"
+      },
+      {
+        "command": "auto-header.createAndInclude",
+        "title": "Create and Include Header File"
       }
-    ]
+    ],
+    "keybindings": [
+      {
+        "command": "auto-header.run",
+        "key": "ctrl+k ctrl+h",
+        "mac": "cmd+k cmd+h",
+        "when": "editorTextFocus && editorLangId =~ /^(c|cpp|csharp)$/"
+      }
+    ],
+    "configuration": {
+      "title": "Auto Header",
+      "properties": {
+        "autoHeader.supportedExtensions": {
+          "type": "array",
+          "default": [".c", ".cpp", ".cc"],
+          "description": "Supported C/C++ source file extensions"
+        },
+        "autoHeader.headerExtensions": {
+          "type": "array",
+          "default": [".h"],
+          "description": "Header file extensions to search for, ordered by priority"
+        },
+        "autoHeader.insertEmptyLineAfter": {
+          "type": "boolean",
+          "default": true,
+          "description": "Add an empty line after the inserted include statement"
+        },
+        "autoHeader.includeFormat": {
+          "type": "string",
+          "enum": ["quotes", "brackets"],
+          "default": "quotes",
+          "description": "Include format for header files, quotes uses \"\", brackets uses <>"
+        },
+        "autoHeader.headerTemplate": {
+          "type": "string",
+          "default": "#pragma once\n\n// Header file for ${filename}\n\n",
+          "description": "Template for new header files, use ${filename} as a placeholder for the file name"
+        },
+        "autoHeader.askBeforeCreating": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ask user before creating a new header file"
+        }
+      }
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorLangId =~ /^(c|cpp|csharp)$/",
+          "command": "auto-header.run",
+          "group": "1_modification"
+        },
+        {
+          "when": "editorLangId =~ /^(c|cpp|csharp)$/",
+          "command": "auto-header.createAndInclude",
+          "group": "1_modification"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
