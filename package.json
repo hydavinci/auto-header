@@ -18,7 +18,7 @@
     "include",
     "automation"
   ],
-  "icon": "images/icon.png",
+  "icon": "./images/icon.png",
   "publisher": "hydavinci",
   "repository": {
     "type": "git",
@@ -43,6 +43,10 @@
       {
         "command": "auto-header.sortIncludes",
         "title": "Sort Include Statements"
+      },
+      {
+        "command": "auto-header.switchHeaderSource",
+        "title": "Switch Between Header and Source"
       }
     ],
     "keybindings": [
@@ -51,6 +55,12 @@
         "key": "ctrl+k ctrl+h",
         "mac": "cmd+k cmd+h",
         "when": "editorTextFocus && editorLangId =~ /^(c|cpp|csharp)$/"
+      },
+      {
+        "command": "auto-header.switchHeaderSource",
+        "key": "f4",
+        "mac": "f4",
+        "when": "editorTextFocus && editorLangId =~ /^(c|cpp|csharp|h)$/"
       }
     ],
     "configuration": {
@@ -109,6 +119,11 @@
         {
           "when": "editorLangId =~ /^(c|cpp|csharp)$/",
           "command": "auto-header.sortIncludes",
+          "group": "1_modification"
+        },
+        {
+          "when": "editorLangId =~ /^(c|cpp|csharp|h)$/",
+          "command": "auto-header.switchHeaderSource",
           "group": "1_modification"
         }
       ]

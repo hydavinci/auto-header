@@ -78,7 +78,12 @@ class AutoHeaderExtension {
       }
     });
 
-    this.context.subscriptions.push(disposable1, disposable2, disposable3);
+    // Register command: Switch between header and source files
+    const disposable4 = vscode.commands.registerCommand('auto-header.switchHeaderSource', async () => {
+      await this.switchHeaderSource();
+    });
+
+    this.context.subscriptions.push(disposable1, disposable2, disposable3, disposable4);
   }
 
   /**
@@ -521,6 +526,149 @@ class AutoHeaderExtension {
       vscode.window.showInformationMessage(`Added ${includeStatement} to the file.`);
     } catch (error) {
       vscode.window.showErrorMessage(`Error adding include statement: ${error}`);
+    }
+  }
+
+  /**
+   * Find the corresponding pair file (.h -> .cc or .cc -> .h)
+   */
+  private async findCorrespondingFile(filePath: string, workspaceFolder: vscode.WorkspaceFolder): Promise<string | undefined> {
+    const config = this.getConfiguration();
+    const fileExtension = path.extname(filePath).toLowerCase();
+    const baseNameWithoutExt = path.basename(filePath, fileExtension);
+    const fileDir = path.dirname(filePath);
+    
+    // If current file is a header file, look for a source file
+    if (config.headerExtensions.includes(fileExtension)) {
+      // Try to find a source file with matching name
+      for (const srcExt of config.supportedExtensions) {
+        const possibleSourceFile = path.join(fileDir, baseNameWithoutExt + srcExt);
+        if (fs.existsSync(possibleSourceFile)) {
+          return possibleSourceFile;
+        }
+      }
+      
+      // Try source file in 'src' directory if the current file is in 'include'
+      const includePattern = /[\/\\]include[\/\\]/;
+      if (includePattern.test(fileDir)) {
+        const srcDir = fileDir.replace(includePattern, '/src/');
+        if (fs.existsSync(srcDir)) {
+          for (const srcExt of config.supportedExtensions) {
+            const possibleSourceFile = path.join(srcDir, baseNameWithoutExt + srcExt);
+            if (fs.existsSync(possibleSourceFile)) {
+              return possibleSourceFile;
+            }
+          }
+        }
+      }
+    } 
+    // If current file is a source file, look for a header file
+    else if (config.supportedExtensions.includes(fileExtension)) {
+      // First try to find the header file using our existing header detection
+      const { headerFilePath, foundHeader } = 
+        await this.findHeaderFile(filePath, workspaceFolder, baseNameWithoutExt);
+      
+      if (foundHeader) {
+        return headerFilePath;
+      }
+    }
+    
+    return undefined;
+  }
+
+  /**
+   * Switch between header and source file
+   */
+  private async switchHeaderSource(): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showErrorMessage('No active editor found!');
+      return;
+    }
+    
+    const filePath = editor.document.uri.fsPath;
+    const fileExtension = path.extname(filePath).toLowerCase();
+    const config = this.getConfiguration();
+    
+    // Check if file is either a header or source file
+    if (!config.headerExtensions.includes(fileExtension) && 
+        !config.supportedExtensions.includes(fileExtension)) {
+      vscode.window.showErrorMessage(
+        `Current file is neither a C/C++ header (${config.headerExtensions.join(', ')}) nor source file (${config.supportedExtensions.join(', ')})`
+      );
+      return;
+    }
+    
+    // Get workspace folder
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+    if (!workspaceFolder) {
+      vscode.window.showErrorMessage('File is not part of a workspace!');
+      return;
+    }
+    
+    // Find corresponding file
+    const correspondingFile = await this.findCorrespondingFile(filePath, workspaceFolder);
+    
+    if (correspondingFile) {
+      // Open the corresponding file
+      const document = await vscode.workspace.openTextDocument(correspondingFile);
+      await vscode.window.showTextDocument(document);
+    } else {
+      // Ask if user wants to create the corresponding file
+      const baseNameWithoutExt = path.basename(filePath, fileExtension);
+      let newFileExt: string;
+      let newFileType: string;
+      
+      if (config.headerExtensions.includes(fileExtension)) {
+        // Current file is a header, so create a source file
+        newFileExt = config.supportedExtensions[0];
+        newFileType = 'source';
+      } else {
+        // Current file is a source, so create a header file
+        newFileExt = config.headerExtensions[0];
+        newFileType = 'header';
+      }
+      
+      const choice = await vscode.window.showInformationMessage(
+        `No corresponding ${newFileType} file found. Create ${baseNameWithoutExt}${newFileExt}?`,
+        'Create', 'Cancel'
+      );
+      
+      if (choice === 'Create') {
+        // Create the new file
+        const newFilePath = path.join(path.dirname(filePath), baseNameWithoutExt + newFileExt);
+        
+        try {
+          // Generate appropriate content based on file type
+          let content = '';
+          if (newFileType === 'header') {
+            content = config.headerTemplate.replace(/\${filename}/g, baseNameWithoutExt);
+          } else {
+            // For source files, add include to the header
+            const relativePath = path.relative(
+              workspaceFolder.uri.fsPath,
+              path.join(path.dirname(filePath), baseNameWithoutExt + config.headerExtensions[0])
+            ).replace(/\\/g, '/');
+            
+            content = `#include "${relativePath}"\n\n`;
+          }
+          
+          // Ensure directory exists
+          const dir = path.dirname(newFilePath);
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+          }
+          
+          // Write the file
+          fs.writeFileSync(newFilePath, content);
+          
+          // Open the new file
+          const document = await vscode.workspace.openTextDocument(newFilePath);
+          await vscode.window.showTextDocument(document);
+        } catch (error) {
+          vscode.window.showErrorMessage(`Error creating file: ${error}`);
+        }
+      }
     }
   }
 
