@@ -1,7 +1,10 @@
 const esbuild = require("esbuild");
+const fs = require("fs");
+const path = require("path");
 
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
+const analyze = process.argv.includes('--analyze');
 
 /**
  * @type {import('esbuild').Plugin}
@@ -23,6 +26,33 @@ const esbuildProblemMatcherPlugin = {
 	},
 };
 
+/**
+ * @type {import('esbuild').Plugin}
+ */
+const analyzeBundlePlugin = {
+  name: 'analyze-bundle',
+  setup(build) {
+    build.onEnd(async (result) => {
+      if (analyze && !result.errors.length) {
+        try {
+          const { visualizer } = await import('esbuild-visualizer');
+          const outdir = path.dirname(build.initialOptions.outfile);
+          
+          console.log('Generating bundle analysis...');
+          await visualizer({
+            metafile: result.metafile,
+            filename: path.join(outdir, 'bundle-analysis.html'),
+            title: 'Auto Header Extension Bundle Analysis',
+          });
+          console.log('Bundle analysis complete! See dist/bundle-analysis.html');
+        } catch (err) {
+          console.error('Failed to analyze bundle:', err);
+        }
+      }
+    });
+  },
+};
+
 async function main() {
 	const ctx = await esbuild.context({
 		entryPoints: [
@@ -37,9 +67,10 @@ async function main() {
 		outfile: 'dist/extension.js',
 		external: ['vscode'],
 		logLevel: 'silent',
+    metafile: analyze,
 		plugins: [
-			/* add to the end of plugins array */
 			esbuildProblemMatcherPlugin,
+      analyzeBundlePlugin,
 		],
 	});
 	if (watch) {

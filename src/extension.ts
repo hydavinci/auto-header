@@ -4,13 +4,29 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 /**
+ * Configuration interface for better type checking
+ */
+interface AutoHeaderConfig {
+  supportedExtensions: string[];
+  headerExtensions: string[];
+  insertEmptyLineAfter: boolean;
+  includeFormat: 'quotes' | 'brackets';
+  headerTemplate: string;
+  askBeforeCreating: boolean;
+  sortIncludes: boolean;
+  cacheDuration: number;
+  groupIncludesByType: boolean;
+}
+
+/**
  * Main class that handles the Auto Header extension functionality
  */
 class AutoHeaderExtension {
   private statusBarItem: vscode.StatusBarItem;
   private context: vscode.ExtensionContext;
-  private configCache: any = null;
+  private configCache: AutoHeaderConfig | null = null;
   private configLastUpdate: number = 0;
+  private fsCache: Map<string, boolean> = new Map(); // Cache for file existence checks
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
@@ -110,25 +126,60 @@ class AutoHeaderExtension {
   /**
    * Get extension configuration with caching
    */
-  private getConfiguration() {
-    // Use cached configuration if available and not too old (5 seconds max age)
+  private getConfiguration(): AutoHeaderConfig {
+    // Get cache duration from configuration or use default
+    const cacheDuration = vscode.workspace.getConfiguration('autoHeader')
+      .get<number>('cacheDuration', 5000);
+    
+    // Use cached configuration if available and not too old
     const now = Date.now();
-    if (this.configCache && now - this.configLastUpdate < 5000) {
+    if (this.configCache && now - this.configLastUpdate < cacheDuration) {
       return this.configCache;
     }
 
     const config = vscode.workspace.getConfiguration('autoHeader');
     this.configCache = {
-      supportedExtensions: config.get<string[]>('supportedExtensions', ['.c', '.cpp', '.cc']),
-      headerExtensions: config.get<string[]>('headerExtensions', ['.h']),
+      supportedExtensions: config.get<string[]>('supportedExtensions', ['.c', '.cpp', '.cc', '.cxx']),
+      headerExtensions: config.get<string[]>('headerExtensions', ['.h', '.hpp', '.hxx']),
       insertEmptyLineAfter: config.get<boolean>('insertEmptyLineAfter', true),
-      includeFormat: config.get<string>('includeFormat', 'quotes'),
+      includeFormat: config.get<string>('includeFormat', 'quotes') as 'quotes' | 'brackets',
       headerTemplate: config.get<string>('headerTemplate', '#pragma once\n\n// Header file for ${filename}\n\n'),
-      askBeforeCreating: config.get<boolean>('askBeforeCreating', true)
+      askBeforeCreating: config.get<boolean>('askBeforeCreating', true),
+      sortIncludes: config.get<boolean>('sortIncludes', false),
+      cacheDuration: cacheDuration,
+      groupIncludesByType: config.get<boolean>('groupIncludesByType', true)
     };
 
     this.configLastUpdate = now;
     return this.configCache;
+  }
+
+  /**
+   * Check if a file exists with caching to reduce file system operations
+   */
+  private fileExists(filePath: string): boolean {
+    // Check cache first
+    if (this.fsCache.has(filePath)) {
+      return this.fsCache.get(filePath) || false;
+    }
+
+    try {
+      // Check file system and cache the result
+      const exists = fs.existsSync(filePath);
+      this.fsCache.set(filePath, exists);
+      return exists;
+    } catch (error) {
+      console.error(`Error checking if file exists: ${error}`);
+      return false;
+    }
+  }
+
+  /**
+   * Clear file system cache to ensure fresh data
+   * This should be called when files are created or deleted
+   */
+  private clearFsCache(): void {
+    this.fsCache.clear();
   }
 
   /**
@@ -243,7 +294,7 @@ class AutoHeaderExtension {
     const config = this.getConfiguration();
 
     // Skip if the directory doesn't exist
-    if (!fs.existsSync(directory)) {
+    if (!this.fileExists(directory)) {
       return { headerIncludePath: '', headerFilePath: '', foundHeader: false };
     }
 
@@ -251,7 +302,7 @@ class AutoHeaderExtension {
     for (const ext of config.headerExtensions) {
       const headerFilePath = path.join(directory, baseNameWithoutExt + ext);
 
-      if (fs.existsSync(headerFilePath)) {
+      if (this.fileExists(headerFilePath)) {
         const headerIncludePath = path.relative(
           workspaceFolder.uri.fsPath,
           headerFilePath
@@ -313,7 +364,7 @@ class AutoHeaderExtension {
     try {
       // Ensure directory exists
       const headerDir = path.dirname(headerFilePath);
-      if (!fs.existsSync(headerDir)) {
+      if (!this.fileExists(headerDir)) {
         fs.mkdirSync(headerDir, { recursive: true });
       }
 
@@ -325,6 +376,9 @@ class AutoHeaderExtension {
 
       // Open the newly created file
       await vscode.window.showTextDocument(vscode.Uri.file(headerFilePath));
+
+      // Clear file system cache
+      this.clearFsCache();
 
       return true;
     } catch (error) {
@@ -357,6 +411,7 @@ class AutoHeaderExtension {
       lineNumber: number;
       text: string;
       isSystemInclude: boolean;
+      includePath: string;
     }
 
     const includeStatements: IncludeStatement[] = [];
@@ -377,7 +432,8 @@ class AutoHeaderExtension {
         includeStatements.push({
           lineNumber: i,
           text: lines[i],
-          isSystemInclude: lines[i].includes('#include <')
+          isSystemInclude: lines[i].includes('#include <'),
+          includePath: match[1]
         });
       } else if (includeBlockStart !== -1 && includeBlockEnd !== -1) {
         // If we've found a non-include line after some includes, check if it's just a blank line
@@ -397,16 +453,19 @@ class AutoHeaderExtension {
 
     // Sort the include statements
     includeStatements.sort((a, b) => {
-      // First sort by system vs. user includes
-      if (a.isSystemInclude && !b.isSystemInclude) {
-        return -1;
-      }
-      if (!a.isSystemInclude && b.isSystemInclude) {
-        return 1;
+      // If grouping by type is enabled, separate system and user includes
+      if (config.groupIncludesByType) {
+        // First sort by system vs. user includes
+        if (a.isSystemInclude && !b.isSystemInclude) {
+          return -1;
+        }
+        if (!a.isSystemInclude && b.isSystemInclude) {
+          return 1;
+        }
       }
 
-      // Then sort alphabetically
-      return a.text.localeCompare(b.text);
+      // Then sort alphabetically by the actual include path
+      return a.includePath.localeCompare(b.includePath);
     });
 
     // Replace the original includes with the sorted ones
@@ -538,28 +597,24 @@ class AutoHeaderExtension {
     const baseNameWithoutExt = path.basename(filePath, fileExtension);
     const fileDir = path.dirname(filePath);
     
+    // Create a cache key for this lookup to avoid redundant file system operations
+    const cacheKey = `${filePath}_corresponding`;
+    const cachedPath = this.context.workspaceState.get<string>(cacheKey);
+    
+    // Return cached path if it exists and the file still exists
+    if (cachedPath && this.fileExists(cachedPath)) {
+      return cachedPath;
+    }
+    
     // If current file is a header file, look for a source file
     if (config.headerExtensions.includes(fileExtension)) {
-      // Try to find a source file with matching name
-      for (const srcExt of config.supportedExtensions) {
-        const possibleSourceFile = path.join(fileDir, baseNameWithoutExt + srcExt);
-        if (fs.existsSync(possibleSourceFile)) {
-          return possibleSourceFile;
-        }
-      }
+      // Try to find a source file with matching name using optimized search
+      const sourceFile = await this.findMatchingSourceFile(fileDir, baseNameWithoutExt, config.supportedExtensions);
       
-      // Try source file in 'src' directory if the current file is in 'include'
-      const includePattern = /[\/\\]include[\/\\]/;
-      if (includePattern.test(fileDir)) {
-        const srcDir = fileDir.replace(includePattern, '/src/');
-        if (fs.existsSync(srcDir)) {
-          for (const srcExt of config.supportedExtensions) {
-            const possibleSourceFile = path.join(srcDir, baseNameWithoutExt + srcExt);
-            if (fs.existsSync(possibleSourceFile)) {
-              return possibleSourceFile;
-            }
-          }
-        }
+      if (sourceFile) {
+        // Cache the result for future lookups
+        this.context.workspaceState.update(cacheKey, sourceFile);
+        return sourceFile;
       }
     } 
     // If current file is a source file, look for a header file
@@ -569,7 +624,58 @@ class AutoHeaderExtension {
         await this.findHeaderFile(filePath, workspaceFolder, baseNameWithoutExt);
       
       if (foundHeader) {
+        // Cache the result for future lookups
+        this.context.workspaceState.update(cacheKey, headerFilePath);
         return headerFilePath;
+      }
+    }
+    
+    return undefined;
+  }
+  
+  /**
+   * Optimized method to find a matching source file with various search strategies
+   */
+  private async findMatchingSourceFile(
+    fileDir: string, 
+    baseNameWithoutExt: string, 
+    supportedExtensions: string[]
+  ): Promise<string | undefined> {
+    // Strategy 1: Same directory (most common case)
+    for (const srcExt of supportedExtensions) {
+      const possibleSourceFile = path.join(fileDir, baseNameWithoutExt + srcExt);
+      if (this.fileExists(possibleSourceFile)) {
+        return possibleSourceFile;
+      }
+    }
+    
+    // Strategy 2: Check for src directory from include
+    const includePattern = /[\/\\]include[\/\\]/;
+    if (includePattern.test(fileDir)) {
+      // Try replacing 'include' with 'src' in the path
+      const srcDir = fileDir.replace(includePattern, 
+        process.platform === 'win32' ? '\\src\\' : '/src/');
+      
+      if (this.fileExists(srcDir)) {
+        for (const srcExt of supportedExtensions) {
+          const possibleSourceFile = path.join(srcDir, baseNameWithoutExt + srcExt);
+          if (this.fileExists(possibleSourceFile)) {
+            return possibleSourceFile;
+          }
+        }
+      }
+    }
+    
+    // Strategy 3: Search for common locations (src directory at same level)
+    const parentDir = path.dirname(fileDir);
+    const srcDir = path.join(parentDir, 'src');
+    
+    if (this.fileExists(srcDir)) {
+      for (const srcExt of supportedExtensions) {
+        const possibleSourceFile = path.join(srcDir, baseNameWithoutExt + srcExt);
+        if (this.fileExists(possibleSourceFile)) {
+          return possibleSourceFile;
+        }
       }
     }
     
@@ -655,7 +761,7 @@ class AutoHeaderExtension {
           
           // Ensure directory exists
           const dir = path.dirname(newFilePath);
-          if (!fs.existsSync(dir)) {
+          if (!this.fileExists(dir)) {
             fs.mkdirSync(dir, { recursive: true });
           }
           
@@ -665,6 +771,9 @@ class AutoHeaderExtension {
           // Open the new file
           const document = await vscode.workspace.openTextDocument(newFilePath);
           await vscode.window.showTextDocument(document);
+
+          // Clear file system cache
+          this.clearFsCache();
         } catch (error) {
           vscode.window.showErrorMessage(`Error creating file: ${error}`);
         }
