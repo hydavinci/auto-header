@@ -1,5 +1,5 @@
 {
-  "name": "auto-header",
+  "name": "auto-header-manager",
   "displayName": "Auto Header",
   "description": "Automatically add and manage header files for C/C++ source files",
   "version": "0.0.2",
@@ -33,31 +33,31 @@
   "contributes": {
     "commands": [
       {
-        "command": "auto-header.run",
+        "command": "auto-header-manager.run",
         "title": "Include Header File"
       },
       {
-        "command": "auto-header.createAndInclude",
+        "command": "auto-header-manager.createAndInclude",
         "title": "Create and Include Header File"
       },
       {
-        "command": "auto-header.sortIncludes",
+        "command": "auto-header-manager.sortIncludes",
         "title": "Sort Include Statements"
       },
       {
-        "command": "auto-header.switchHeaderSource",
+        "command": "auto-header-manager.switchHeaderSource",
         "title": "Switch Between Header and Source"
       }
     ],
     "keybindings": [
       {
-        "command": "auto-header.run",
+        "command": "auto-header-manager.run",
         "key": "ctrl+k ctrl+h",
         "mac": "cmd+k cmd+h",
         "when": "editorTextFocus && editorLangId =~ /^(c|cpp|csharp)$/"
       },
       {
-        "command": "auto-header.switchHeaderSource",
+        "command": "auto-header-manager.switchHeaderSource",
         "key": "f4",
         "mac": "f4",
         "when": "editorTextFocus && editorLangId =~ /^(c|cpp|csharp|h)$/"
@@ -118,22 +118,22 @@
       "editor/context": [
         {
           "when": "editorLangId =~ /^(c|cpp|csharp)$/",
-          "command": "auto-header.run",
+          "command": "auto-header-manager.run",
           "group": "1_modification"
         },
         {
           "when": "editorLangId =~ /^(c|cpp|csharp)$/",
-          "command": "auto-header.createAndInclude",
+          "command": "auto-header-manager.createAndInclude",
           "group": "1_modification"
         },
         {
           "when": "editorLangId =~ /^(c|cpp|csharp)$/",
-          "command": "auto-header.sortIncludes",
+          "command": "auto-header-manager.sortIncludes",
           "group": "1_modification"
         },
         {
           "when": "editorLangId =~ /^(c|cpp|csharp|h)$/",
-          "command": "auto-header.switchHeaderSource",
+          "command": "auto-header-manager.switchHeaderSource",
           "group": "1_modification"
         }
       ]

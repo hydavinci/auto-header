@@ -8,7 +8,7 @@ A simple and efficient VS Code extension for automatically managing header file 
 - Quick access through the context menu
 - Status bar button for easy access
 - Keyboard shortcut support with `Ctrl+K Ctrl+H`
-- **NEW:** Switch between header and source files with `F4` key
+- Switch between header and source files with `F4` key
 - Ability to create non-existent header files automatically
 - Preserves comments at the top of the file when adding include statements
 - Highly customizable with various configuration options
