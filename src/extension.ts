@@ -36,7 +36,7 @@ class AutoHeaderExtension {
       vscode.StatusBarAlignment.Left,
       0
     );
-    this.statusBarItem.text = "$(file-add) Add Header";
+    this.statusBarItem.text = "$(file-add) Include Header";
     this.statusBarItem.tooltip = "Add corresponding header file to the current C/C++ source file";
     this.statusBarItem.command = 'auto-header-manager.run';
     context.subscriptions.push(this.statusBarItem);

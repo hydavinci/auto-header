@@ -1,6 +1,6 @@
 {
   "name": "auto-header-manager",
-  "displayName": "Auto Header",
+  "displayName": "Auto Header Manager",
   "description": "Automatically add and manage header files for C/C++ source files",
   "version": "0.0.2",
   "engines": {
@@ -64,7 +64,7 @@
       }
     ],
     "configuration": {
-      "title": "Auto Header",
+      "title": "Auto Header Manager",
       "properties": {
         "autoHeader.supportedExtensions": {
           "type": "array",
