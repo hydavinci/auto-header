@@ -18,7 +18,7 @@
     "include",
     "automation"
   ],
-  "icon": "./images/icon.png",
+  "icon": "images/icon.png",
   "publisher": "hydavinci",
   "repository": {
     "type": "git",
