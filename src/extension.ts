@@ -38,7 +38,7 @@ class AutoHeaderExtension {
     );
     this.statusBarItem.text = "$(file-add) Include Header";
     this.statusBarItem.tooltip = "Add corresponding header file to the current C/C++ source file";
-    this.statusBarItem.command = 'auto-header-manager.run';
+    this.statusBarItem.command = 'auto-header.run';
     context.subscriptions.push(this.statusBarItem);
 
     // Register commands
@@ -50,7 +50,7 @@ class AutoHeaderExtension {
     // Initialize status bar visibility
     this.updateStatusBarVisibility(vscode.window.activeTextEditor);
 
-    console.log('Extension "auto-header-manager" is now active!');
+    console.log('Extension "auto-header" is now active!');
   }
 
   /**
@@ -58,7 +58,7 @@ class AutoHeaderExtension {
    */
   private registerCommands(): void {
     // Register command: Add header file
-    const disposable1 = vscode.commands.registerCommand('auto-header-manager.run', async () => {
+    const disposable1 = vscode.commands.registerCommand('auto-header.run', async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         vscode.window.showErrorMessage('No active editor found!');
@@ -69,7 +69,7 @@ class AutoHeaderExtension {
     });
 
     // Register command: Create and add header file
-    const disposable2 = vscode.commands.registerCommand('auto-header-manager.createAndInclude', async () => {
+    const disposable2 = vscode.commands.registerCommand('auto-header.createAndInclude', async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         vscode.window.showErrorMessage('No active editor found!');
@@ -80,7 +80,7 @@ class AutoHeaderExtension {
     });
 
     // Register command: Sort includes in current file
-    const disposable3 = vscode.commands.registerCommand('auto-header-manager.sortIncludes', async () => {
+    const disposable3 = vscode.commands.registerCommand('auto-header.sortIncludes', async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         vscode.window.showErrorMessage('No active editor found!');
@@ -95,7 +95,7 @@ class AutoHeaderExtension {
     });
 
     // Register command: Switch between header and source files
-    const disposable4 = vscode.commands.registerCommand('auto-header-manager.switchHeaderSource', async () => {
+    const disposable4 = vscode.commands.registerCommand('auto-header.switchHeaderSource', async () => {
       await this.switchHeaderSource();
     });
 

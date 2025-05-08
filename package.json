@@ -1,6 +1,6 @@
 {
-  "name": "auto-header-manager",
-  "displayName": "Auto Header Manager",
+  "name": "auto-header",
+  "displayName": "C/C++ Auto Header",
   "description": "Automatically add and manage header files for C/C++ source files",
   "version": "0.0.2",
   "engines": {
@@ -33,38 +33,38 @@
   "contributes": {
     "commands": [
       {
-        "command": "auto-header-manager.run",
+        "command": "auto-header.run",
         "title": "Include Header File"
       },
       {
-        "command": "auto-header-manager.createAndInclude",
+        "command": "auto-header.createAndInclude",
         "title": "Create and Include Header File"
       },
       {
-        "command": "auto-header-manager.sortIncludes",
+        "command": "auto-header.sortIncludes",
         "title": "Sort Include Statements"
       },
       {
-        "command": "auto-header-manager.switchHeaderSource",
+        "command": "auto-header.switchHeaderSource",
         "title": "Switch Between Header and Source"
       }
     ],
     "keybindings": [
       {
-        "command": "auto-header-manager.run",
+        "command": "auto-header.run",
         "key": "ctrl+k ctrl+h",
         "mac": "cmd+k cmd+h",
         "when": "editorTextFocus && editorLangId =~ /^(c|cpp|csharp)$/"
       },
       {
-        "command": "auto-header-manager.switchHeaderSource",
+        "command": "auto-header.switchHeaderSource",
         "key": "f4",
         "mac": "f4",
         "when": "editorTextFocus && editorLangId =~ /^(c|cpp|csharp|h)$/"
       }
     ],
     "configuration": {
-      "title": "Auto Header Manager",
+      "title": "C/C++ Auto Header",
       "properties": {
         "autoHeader.supportedExtensions": {
           "type": "array",
@@ -118,22 +118,22 @@
       "editor/context": [
         {
           "when": "editorLangId =~ /^(c|cpp|csharp)$/",
-          "command": "auto-header-manager.run",
+          "command": "auto-header.run",
           "group": "1_modification"
         },
         {
           "when": "editorLangId =~ /^(c|cpp|csharp)$/",
-          "command": "auto-header-manager.createAndInclude",
+          "command": "auto-header.createAndInclude",
           "group": "1_modification"
         },
         {
           "when": "editorLangId =~ /^(c|cpp|csharp)$/",
-          "command": "auto-header-manager.sortIncludes",
+          "command": "auto-header.sortIncludes",
           "group": "1_modification"
         },
         {
           "when": "editorLangId =~ /^(c|cpp|csharp|h)$/",
-          "command": "auto-header-manager.switchHeaderSource",
+          "command": "auto-header.switchHeaderSource",
           "group": "1_modification"
         }
       ]
