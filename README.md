@@ -1,18 +1,20 @@
-# Auto Header
+# C/C++ Auto Header
 
-A simple and efficient VS Code extension for automatically managing header file includes in C/C++ files.
+A high-performance VS Code extension for automatically managing header file includes in C/C++ projects with intelligent detection and comprehensive file management capabilities.
 
 ## Features
 
-- Automatically add corresponding `.h` header files to C/C++ source files
+- Automatically add corresponding header files to C/C++ source files
 - Quick access through the context menu
 - Status bar button for easy access
 - Keyboard shortcut support with `Ctrl+K Ctrl+H`
 - Switch between header and source files with `F4` key
 - Ability to create non-existent header files automatically
+- Smart include statement management and sorting
 - Preserves comments at the top of the file when adding include statements
 - Highly customizable with various configuration options
-- Include statement sorting capability
+- Fast operation with optimized caching mechanisms
+- Intelligent header file detection using multiple search strategies
 
 ## Usage
 
@@ -38,7 +40,7 @@ The extension will create a new header file and automatically add basic header g
 
 ### Switching Between Header and Source Files
 
-You can quickly switch between a header (.h) file and its corresponding source file (.c, .cpp, .cc) using:
+You can quickly switch between a header (.h, .hpp, .hxx) file and its corresponding source file (.c, .cpp, .cc, .cxx) using:
 
 1. Press the `F4` key when editing either a header or source file
 2. Right-click and select "Switch Between Header and Source"
@@ -55,31 +57,62 @@ You can sort include statements in your file by:
 
 This will organize includes with system headers (`<>`) first, followed by user headers (`""`), all sorted alphabetically.
 
+## Smart Header Detection
+
+The extension uses multiple strategies to find the corresponding header file:
+
+1. Same directory as the source file
+2. "include" directory adjacent to source
+3. "include" subdirectory within source directory
+4. Parent directory's "include" folder
+5. "headers" directory adjacent to source
+
+This makes the extension work well with various C/C++ project structures without additional configuration.
+
 ## Configuration Options
 
 You can customize the following options in settings:
 
 | Setting | Description | Default Value |
 | --- | --- | --- |
-| `autoHeader.supportedExtensions` | Supported C/C++ source file extensions | `[".c", ".cpp", ".cc"]` |
-| `autoHeader.headerExtensions` | Header file extensions to search for, ordered by priority | `[".h"]` |
+| `autoHeader.supportedExtensions` | Supported C/C++ source file extensions | `[".c", ".cpp", ".cc", ".cxx"]` |
+| `autoHeader.headerExtensions` | Header file extensions to search for, ordered by priority | `[".h", ".hpp", ".hxx"]` |
 | `autoHeader.insertEmptyLineAfter` | Add an empty line after the inserted include statement | `true` |
 | `autoHeader.includeFormat` | Include format for header files, quotes uses `""`, brackets uses `<>` | `"quotes"` |
 | `autoHeader.headerTemplate` | Template for new header files, use `${filename}` as a placeholder for the file name | `"#pragma once\n\n// Header file for ${filename}\n\n"` |
 | `autoHeader.askBeforeCreating` | Ask user before creating a new header file | `true` |
 | `autoHeader.sortIncludes` | Automatically sort include statements after adding a new header | `false` |
+| `autoHeader.cacheDuration` | Duration in milliseconds to cache file existence information (set to 0 to disable caching) | `5000` |
+| `autoHeader.groupIncludesByType` | When sorting, group system includes (`<>`) first, followed by project includes (`""`) | `true` |
+
+## Performance Optimizations
+
+This extension is designed for high performance with:
+
+- Smart caching of file system operations to minimize disk access
+- Efficient include statement management
+- Optimized build process for fast loading
+- Modular code structure for better maintainability
 
 ## Example
 
 For a source file named `example.cpp`, the extension will:
 
-1. Look for an `example.h` file in the same directory
+1. Look for an `example.h` file using multiple search strategies
 2. Add `#include "example.h"` at the top of the file
-3. If the header file doesn't exist and the user chooses to create it, generate a new header file with a basic structure
+3. Sort the include statements if enabled
+4. If the header file doesn't exist and the user chooses to create it, generate a new header file with a basic structure
 
 When pressing `F4` while in `example.cpp`, the extension will open `example.h` (or offer to create it if it doesn't exist).
 
 ## Version History
+
+### 0.0.3 (May 2025)
+- Complete code restructuring with modular architecture
+- Significantly improved performance through optimized caching
+- Enhanced build process with better tree-shaking and minification
+- Better error handling and user feedback
+- Fixed memory usage and edge case issues
 
 ### 0.0.2
 - Added F4 key functionality to switch between header and source files

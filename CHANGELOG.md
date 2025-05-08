@@ -4,6 +4,28 @@ All notable changes to the "cpp-auto-header" extension will be documented in thi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.3] - 2025-05-08
+
+### Added
+- Complete code restructuring with modular architecture
+- New specialized service classes for improved organization
+- Comprehensive JSDoc documentation throughout the codebase
+- Enhanced type safety with dedicated interfaces
+- Improved error handling and user feedback
+
+### Changed
+- Significantly improved performance through optimized caching
+- Enhanced build process with better tree-shaking and minification
+- Reorganized code into logical modules with clear responsibilities
+- Improved header detection algorithms with better caching
+- Better status bar integration with more accurate visibility control
+
+### Fixed
+- Memory usage issues through better resource management
+- Build size optimization for faster loading
+- Potential race conditions in file system operations
+- Edge cases in header file detection
+
 ## [0.0.2] - 2025-05-07
 
 ### Added
