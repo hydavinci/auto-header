@@ -1,5 +1,5 @@
 {
-  "name": "auto-header",
+  "name": "cpp-auto-header",
   "displayName": "C/C++ Auto Header",
   "description": "Automatically add and manage header files for C/C++ source files",
   "version": "0.0.2",
