@@ -2,7 +2,7 @@
   "name": "cpp-auto-header",
   "displayName": "C/C++ Auto Header",
   "description": "Automatically add and manage header files for C/C++ source files",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.99.0"
   },
